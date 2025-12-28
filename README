@@ -1,0 +1,4 @@
+ps4-linux-initramfs
+
+Initial RAM Filesystem (initrd, initramfs) for PS4 consoles running Linux.  
+Based on the [better-initramfs project](https://github.com/fff7d1bc/better-initramfs), [BusyBox](https://www.busybox.net/) and others.
