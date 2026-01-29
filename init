@@ -72,11 +72,11 @@ process_commandline_options
 InitializeBusybox
 emount /dev
 run_hooks early
-SetupNetwork
-use sshd && setup_sshd
+#SetupNetwork
+#use sshd && setup_sshd
 loadkeymap
 
-use rootdelay rootdelay
+use rootdelay rootdelay #needs rootdelay variable to be set, through kernel parameter?
 
 # Let's try to support all possible combinations of storage layers.
 use bcache register_bcache_devices
@@ -84,20 +84,68 @@ use softraid InitializeSoftwareRaid && use bcache register_bcache_devices
 use lvm InitializeLVM && use bcache register_bcache_devices
 use luks InitializeLUKS && use lvm InitializeLVM && use bcache register_bcache_devices
 
-populate_dev_disk_by_label_and_uuid
+# populate_dev_disk_by_label_and_uuid
 
 use rescueshell rescueshell
-use swsusp && SwsuspResume
+use swsusp && SwsuspResume 
+#missing uswsusp && Uswsuspresume from older initramfs
 use tuxonice TuxOnIceResume
 run_hooks pre_newroot_mount
+
+
+# # PS4 specific section:
+echo "Setting up (en)crypt(ted) mount setup for PlayStation 4 HDD." 
+echo "Using PS4 11xx model and later partition encryption scheme. . ."
+sleep 4
+cryptsetup -d /key/eap_hdd_key.bin --cipher aes-xts-plain64 -s 256 --offset 0 --skip 111669149696 create ps4hdd /dev/sd?27
+echo "Finished cryptsetup. Mounting the encrypted drive. . ."
+
+mkdir /ps4hdd
+mount -t ufs -o ufstype=ufs2 /dev/mapper/ps4hdd /ps4hdd
+
+# dmesg > /ps4hdd/system/boot/dmesg_"$(uname -r)"
+choose_boot_os
+
+###
+#if [ -f /ps4hdd/home/Arch.img ]; then
+#	echo ""
+#else
+#	echo "No Arch.img found in /ps4hdd/home/ , reentering rescueshell"
+#	rescueshell
+#fi
+###
+
+choose_os_offset
+setup_img_loop_device
+os_filesystem_check
+
+mount /dev/loop0 /newroot
+if [ -f /newroot/home/eap_hdd_key.bin ]; then
+	echo ''
+else
+	cp /key/eap_hdd_key.bin /newroot/home/eap_hdd_key.bin
+fi
+
+# # End of PS4 specific section
+
 emount /newroot
-emount /newroot/usr
+emount /newroot/usr #new!!
 # Wait for sshd connection only if rescueshell have never occur.
-use sshd && was_shell || wait_sshd
+#use sshd && was_shell || wait_sshd
+
 cleanup
 moveDev
 eumount /sys /proc
 run_hooks pre_switch_root
+
+# # PS4 specific section:
+#
+if [ ! -d /newroot/ps4hdd ]; then
+	mkdir /newroot/ps4hdd
+fi
+mount /ps4hdd /newroot/ps4hdd
+# # End of PS4 specific section
+
 boot_newroot
 
 ewarn "Something went wrong."
