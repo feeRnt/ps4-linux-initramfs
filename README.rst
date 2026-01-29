@@ -3,7 +3,7 @@ ps4-linux-initramfs
 ===================
 
 Initial RAM Filesystem (initrd, initramfs) for PS4 consoles running Linux.  
-Based on the [better-initramfs project](https://github.com/fff7d1bc/better-initramfs), [BusyBox](https://www.busybox.net/) and others.
+Based on the [better-initramfs project](https://github.com/fff7d1bc/better-initramfs), using [Landley's Aboriginal Linux](https://landley.net/aboriginal), [BusyBox](https://www.busybox.net/) and others.
 (See below for its documentation)
 
 Original PS4 initramfs by [Ps3itaTeam](https://github.com/Ps3itaTeam), [Nazky](https://github.com/Nazky), [hippie68](https://github.com/hippie68) and others, also based on better-initramfs.
