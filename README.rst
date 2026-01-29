@@ -51,9 +51,9 @@ To make your modifications to the init scripts, functions, and other elements, s
 git clone https://github.com/feeRnt/ps4-linux-initramfs --depth=2
 cd ps4-linux-initramfs
 
-# Make changes
+# Make changes, then:
 
-find . | cpio --quiet --owner=0:0 -H newc -o | gzip -9 > ../initramfs.cpio.gz
+find . -path ./.git -prune -o -print | cpio --quiet --owner=0:0 -H newc -o | gzip -9 > ../initramfs.cpio.gz
 ```
 and there, you can use the generated initramfs file in your PS4 Linux boot directory or partition, and test your changes. Do keep in mind that syntax errors or unparsable commands in your /init file will make the rescueshell unfunctional.
 
