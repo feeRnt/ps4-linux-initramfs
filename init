@@ -84,7 +84,8 @@ use softraid InitializeSoftwareRaid && use bcache register_bcache_devices
 use lvm InitializeLVM && use bcache register_bcache_devices
 use luks InitializeLUKS && use lvm InitializeLVM && use bcache register_bcache_devices
 
-# populate_dev_disk_by_label_and_uuid
+# populate_dev_disk_by_label_and_uuid #kept this off as it seems unnecessary and overcomplicated with PS4's
+# encrypted partitioning system
 
 use rescueshell rescueshell
 use swsusp && SwsuspResume 
@@ -131,7 +132,7 @@ fi
 emount /newroot
 emount /newroot/usr #new!!
 # Wait for sshd connection only if rescueshell have never occur.
-#use sshd && was_shell || wait_sshd
+use sshd && was_shell || wait_sshd
 
 cleanup
 moveDev
