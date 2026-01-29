@@ -676,7 +676,7 @@ choose_os_offset() {
 		echo "Set _imageOffset to 0";
 	fi;
 
-	read -t 12 -p "Current Linux distro img file offset: $_imageOffset. Change to ... (1048576 for linuxmint): " imageOffset; 
+	read -t 12 -p "Current Linux distro img file offset: $_imageOffset bytes. Change to ...? (if unsure, pick 0): " imageOffset; 
 	echo -e "\n";
 	 	# start sector * logical size of sector (512)
 		#TODO: Put in an fstab like file for differently name .img files...
