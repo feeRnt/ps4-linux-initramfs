@@ -172,7 +172,7 @@ The better-initramfs started from the need to boot from dmcrypted rootfs and the
 
 About: ps4-linux-initramfs (feeRnt)
 ===================================
-Bascially better-initramfs, but with small changes in the init scripts and functions to allow booting and installing a Linux distribution into an .img file or an external HDD/SSD partition. The PS4's harddisk partitions cannot be used for a standalone install, as all 11 of them are used by original host OS; hence we use a file system image file to install an distro into it.
+Bascially better-initramfs, but with small changes in the init scripts and functions to allow booting and installing a Linux distribution into an .img file or an external HDD/SSD partition. The PS4's harddisk partitions cannot be used for a standalone install, as all 15 of them are used by original host OS; hence we use a file system image file to install a distro into it.
 
 The kernel resides in a predefined directory which is then used to run the rescueshell (initramfs).
 
