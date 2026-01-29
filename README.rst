@@ -47,12 +47,14 @@ Fetch & Build
 The initramfs with the root-filesystem, device nodes and system utils is already pre-built in this repo (January 2026).
 To make your modifications to the init scripts, functions, and other elements, simply clone the repo, make changes, and repack into compressed cpio
 
-.. code-block:: sh
+.. code-block:: bash
+
         git clone https://github.com/feeRnt/ps4-linux-initramfs --depth=2
         cd ps4-linux-initramfs
         # Make changes, then:
 
         find . -path ./.git -prune -o -print | cpio --quiet --owner=0:0 -H newc -o | gzip -9 > ../initramfs.cpio.gz
+
 
 and there, you can use the generated initramfs file in your PS4 Linux boot directory or partition, and test your changes. Do keep in mind that syntax errors or unparsable commands in your /init file will make the rescueshell unfunctional.
 
