@@ -72,8 +72,8 @@ process_commandline_options
 InitializeBusybox
 emount /dev
 run_hooks early
-#SetupNetwork
-#use sshd && setup_sshd
+SetupNetwork
+use sshd && setup_sshd
 loadkeymap
 
 use rootdelay rootdelay #needs rootdelay variable to be set, through kernel parameter?
