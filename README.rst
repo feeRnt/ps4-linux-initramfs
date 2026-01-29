@@ -3,10 +3,10 @@ ps4-linux-initramfs
 ===================
 
 Initial RAM Filesystem (initrd, initramfs) for PS4 consoles running Linux.  
-Based on the [better-initramfs project](https://github.com/fff7d1bc/better-initramfs), using [Landley's Aboriginal Linux](https://landley.net/aboriginal), [BusyBox](https://www.busybox.net/) and others.
+Based on the `better-initramfs project <https://github.com/fff7d1bc/better-initramfs>`_, using `Landley's Aboriginal Linux <https://landley.net/aboriginal>`_, `BusyBox <https://www.busybox.net/>`_ and others.
 (See below for its documentation)
 
-Original PS4 initramfs by [Ps3itaTeam](https://github.com/Ps3itaTeam), [Nazky](https://github.com/Nazky), [hippie68](https://github.com/hippie68) and others, also based on better-initramfs.
+Original PS4 initramfs by `Ps3itaTeam <https://github.com/Ps3itaTeam>`_, `Nazky <https://github.com/Nazky>`_, `hippie68 <https://github.com/hippie68>`_ and others, also based on better-initramfs.
 
 
 Modified by feeRnt for newer shell binaries and libraries, and for improved quality of life on PS4 Linux.
@@ -45,16 +45,15 @@ Fetch & Build
 -------------
 
 The initramfs with the root-filesystem, device nodes and system utils is already pre-built in this repo (January 2026).
-To make your modifications to the init scripts, functions, and other elements, simply clone the repo, make changes, and repack into compressed cpio::
+To make your modifications to the init scripts, functions, and other elements, simply clone the repo, make changes, and repack into compressed cpio
 
-```sh
-git clone https://github.com/feeRnt/ps4-linux-initramfs --depth=2
-cd ps4-linux-initramfs
+.. code-block:: sh
+        git clone https://github.com/feeRnt/ps4-linux-initramfs --depth=2
+        cd ps4-linux-initramfs
+        # Make changes, then:
 
-# Make changes, then:
+        find . -path ./.git -prune -o -print | cpio --quiet --owner=0:0 -H newc -o | gzip -9 > ../initramfs.cpio.gz
 
-find . -path ./.git -prune -o -print | cpio --quiet --owner=0:0 -H newc -o | gzip -9 > ../initramfs.cpio.gz
-```
 and there, you can use the generated initramfs file in your PS4 Linux boot directory or partition, and test your changes. Do keep in mind that syntax errors or unparsable commands in your /init file will make the rescueshell unfunctional.
 
 
@@ -187,12 +186,12 @@ This repo contains two licenses:
 Authors
 =======
 better-initramfs maintained by:
-        Piotr Karbowski <piotr.karbowski@gmail.com>
-        Check contributors in ``git log``.
+        | Piotr Karbowski <piotr.karbowski@gmail.com>
+        | Check contributors in ``git log``.
 
 ps4-linux-initramfs authored by:
-        feeRnt <elyebassi@gmail.com>
-        derived from 
-        Ps3itaTeam (https://github.com/Ps3itaTeam) 
-        Nazky (https://github.com/Nazky), 
-        hippie68 (https://github.com/hippie68) and others.
+        | feeRnt (https://github.com/feeRnt),
+        | derived from   
+        | Ps3itaTeam (https://github.com/Ps3itaTeam),
+        | Nazky (https://github.com/Nazky),  
+        | hippie68 (https://github.com/hippie68) and others.
