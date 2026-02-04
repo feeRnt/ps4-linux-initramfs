@@ -178,9 +178,11 @@ The kernel resides in a predefined directory which is then used to run the rescu
 
 License
 =======
-This repo contains two licenses:
+This repo contains a few licenses:
 
-- The code is released under Simplified BSD License, see LICENSE for more information.
+- The code (functions, .sh files, init, etc.) is released under Simplified BSD License; see LICENSE for more information.
+
+- Binary programs files in bin/, and their associated library.so files in lib/ are released under a GPLv2 or Later License, unless mentioned otherwise; see LICENSE.GPL2 for more information.
 
 - The binary firmware blobs in lib/firmware/mrvl are licensed under a proprietary Marvell license;
   see LICENCE.Marvell for more information.
