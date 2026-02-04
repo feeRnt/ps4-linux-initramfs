@@ -640,7 +640,8 @@ choose_boot_os() {
 		touch /ps4hdd/home/fstab
 	fi;
 	_old_OS="$(sed -n '2p' /ps4hdd/home/fstab)"
-	if [[ -z "$_old_OS" ]]; then
+	if [[ -z "$_old_OS" ]] || ! [[ "$_old_OS" =~ [[:alnum:]+] ]]; then 
+	#if [[ "$_old_OS" == "" ]] || [[ -z "$_old_OS" ]]; then
 		_old_OS="$(echo -e "$_OS_list" | head -1)"
 	fi
 	
@@ -648,28 +649,35 @@ choose_boot_os() {
 	read -t 15 -p "Please type out the OS you would like to boot within 15 seconds. Will default to $_old_OS <- . . . : "$'\n' _OS;
 	echo -e "Selected $_OS for launch. . .\n";
 
-	if [[ -z "$_OS" ]]; then 
+	if [[ -z "$_OS" ]] || ! [[ "$_OS" =~ [[:alnum:]+] ]]; then 
 		_OS="$_old_OS"
 	fi
 	sed -i "2 s/.*/$_OS/" /ps4hdd/home/fstab;
+
+	[[ -z "$_OS" ]] && ewarn "No distribution/OS found for launching. Make sure you have an .img file in /ps4hdd/home/ or, from Orbis-FTP, /user/home/"\
+		&& rescueshell
 }
 
 choose_os_offset() {
 
-	if [[ -n $_OS ]];
+	if [[ -n "$_OS" ]] && [[ "$_OS" =~ [[:alnum:]+] ]];  #can also use [[:space:]]
 		#then _OS_offset="$(grep "$_OS" /ps4hdd/home/fstab | sed  -nE 's|.*\t([0-9]*)|\1|p')"
 		#Either write good regex, or have sed or tr cut out the white space characters
 		then _OS_offset="$(grep "$_OS" /ps4hdd/home/fstab | sed  -nE 's|.*\t([0-9]*)|\1|p' | tr -d ' \n\ry')"
 						#		| sed -E 's|[ \n\cr]||g')"
 						#this evaluates to not nill in the initramfs sh... but not in regular linux bash
-		echo "_OS_offset for $_OS : $_OS_offset bytes"
+		if  [[ "$_OS_offset" =~ [[:digit:]+] ]]; then
+			echo "_OS_offset for $_OS : $_OS_offset bytes"
+		else
+			_OS_offset=0;
+		fi;
 	else
 		_OS_offset=0;
 
 	fi;
 
-	if [[ -n $_OS_offset ]];
-		then _imageOffset="$_OS_offset";
+	if [[ -n $_OS_offset ]]; then
+		_imageOffset="$_OS_offset";
 		echo "Set _imageOffset to _OS_offset = $_OS_offset";
 	else
 		_imageOffset=0;
