@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # dhclient-script for Linux. Dan Halbert, March, 1997.
 # Updated for Linux 2.[12] by Brian J. Murrell, January 1999.
 # No guarantees about this. I'm a novice at the details of Linux
@@ -32,6 +32,7 @@
 # if your system holds ip tool in a non-standard location.
 #ip=/sbin/ip
 # Not applicabe in initramfs stage; ip is built into busybox
+ip=ip #needs to still be declared though as ${ip} is used throughout the script
 
 # update /etc/resolv.conf based on received values
 # This updated version mostly follows Debian script by Andrew Pollock et al.
@@ -75,8 +76,11 @@ make_resolv_conf() {
         fi
 
 	if [ -f /etc/resolv.conf ]; then
-	    chown --reference=/etc/resolv.conf $new_resolv_conf
-	    chmod --reference=/etc/resolv.conf $new_resolv_conf
+	    #chown --reference=/etc/resolv.conf $new_resolv_conf
+	    chown 0 $new_resolv_conf # owned by root at initramfs
+	    #chmod --reference=/etc/resolv.conf $new_resolv_conf
+	    chmod 0644 $new_resolv_conf # file perms of previous resolv.conf as tested with stat in BusyBox
+	    # The busybox chmod/chown does not have the reference flag
 	fi
         mv -f $new_resolv_conf /etc/resolv.conf
     # DHCPv6
@@ -102,8 +106,10 @@ make_resolv_conf() {
         fi
 
 	if [ -f /etc/resolv.conf ]; then
-            chown --reference=/etc/resolv.conf $new_resolv_conf
-            chmod --reference=/etc/resolv.conf $new_resolv_conf
+            #chown --reference=/etc/resolv.conf $new_resolv_conf
+	    chown 0 $new_resolv_conf
+            #chmod --reference=/etc/resolv.conf $new_resolv_conf
+	    chmod 0644 $new_resolv_conf
 	fi
         mv -f $new_resolv_conf /etc/resolv.conf
     fi
@@ -182,9 +188,10 @@ exit_with_hooks() {
 # ships with Centos, authored by Jiri Popelka and David Cantrell
 # of Redhat. Thanks guys.
 add_ipv6_addr_with_DAD() {
-    ${ip} -6 addr replace ${new_ip6_address}/${new_ip6_prefixlen} \
+    ${ip} -f inet6 addr replace ${new_ip6_address}/${new_ip6_prefixlen} \
     dev ${interface} scope global valid_lft ${new_max_life} \
         preferred_lft ${new_preferred_life}
+    # -6 is equivalent to -f[amily] inet6
 
     if [ ${dad_wait_time} -le 0 ]
     then
@@ -197,7 +204,7 @@ add_ipv6_addr_with_DAD() {
     for i in $(seq 1 ${dad_wait_time}); do
         sleep 1 # give the DAD some time
 
-        addr=$(${ip} -6 addr show dev ${interface} \
+        addr=$(${ip} -f inet6 addr show dev ${interface} \
             | grep ${new_ip6_address}/${new_ip6_prefixlen})
 
         # tentative flag == DAD is still not complete
@@ -208,7 +215,7 @@ add_ipv6_addr_with_DAD() {
         if [ -n "${dadfailed}" ] ; then
             # address was added with valid_lft/preferred_lft 'forever',
             # remove it
-            ${ip} -6 addr del ${new_ip6_address}/${new_ip6_prefixlen} \
+            ${ip} -f inet6 addr del ${new_ip6_address}/${new_ip6_prefixlen} \
                 dev ${interface}
 
             exit_with_hooks 3
@@ -250,7 +257,8 @@ case "$reason" in
 
         if [ -n "$alias_ip_address" ]; then
             # flush alias IP from interface
-            ${ip} -4 addr flush dev ${interface} label ${interface}:0
+            #${ip} -4 addr flush dev ${interface} label ${interface}:0
+            ${ip} -f inet addr flush dev ${interface} label ${interface}:0
         fi
 
         ;;
@@ -261,20 +269,23 @@ case "$reason" in
         if [ -n "$old_ip_address" ] && [ -n "$alias_ip_address" ] &&
            [ "$alias_ip_address" != "$old_ip_address" ]; then
             # alias IP may have changed => flush it
-            ${ip} -4 addr flush dev ${interface} label ${interface}:0
+            #${ip} -4 addr flush dev ${interface} label ${interface}:0
+            ${ip} -f inet addr flush dev ${interface} label ${interface}:0
         fi
 
         if [ -n "$old_ip_address" ] &&
            [ "$old_ip_address" != "$new_ip_address" ]; then
             # leased IP has changed => flush it
-            ${ip} -4 addr flush dev ${interface} label ${interface}
+            #${ip} -4 addr flush dev ${interface} label ${interface}
+            ${ip} -f inet addr flush dev ${interface} label ${interface}
         fi
 
         if [ -z "$old_ip_address" ] ||
            [ "$old_ip_address" != "$new_ip_address" ] ||
            [ "$reason" = "BOUND" ] || [ "$reason" = "REBOOT" ]; then
             # new IP has been leased or leased IP changed => set it
-            ${ip} -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
+            # ${ip} -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
+            ${ip} -f inet addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
                 ${new_broadcast_address:+broadcast $new_broadcast_address} \
                 dev ${interface} label ${interface}
 
@@ -295,11 +306,13 @@ case "$reason" in
 		    for router in $new_routers; do
 			if [ "$new_subnet_mask" = "255.255.255.255" ]; then
 			    # point-to-point connection => set explicit route
-			    ${ip} -4 route add ${router} dev $interface >/dev/null 2>&1
+			    #${ip} -4 route add ${router} dev $interface >/dev/null 2>&1
+			    ${ip} -f inet route add ${router} dev $interface >/dev/null 2>&1
 			fi
 
 			# set default route
-			${ip} -4 route add default via ${router} dev ${interface} \
+			#${ip} -4 route add default via ${router} dev ${interface} \
+			${ip} -f inet route add default via ${router} dev ${interface} \
 			    ${if_metric:+metric $if_metric} >/dev/null 2>&1
 
 			if [ -n "$if_metric" ]; then
@@ -313,10 +326,13 @@ case "$reason" in
            [ "$new_ip_address" != "$alias_ip_address" ]; then
             # separate alias IP given, which may have changed
             # => flush it, set it & add host route to it
-            ${ip} -4 addr flush dev ${interface} label ${interface}:0
-            ${ip} -4 addr add ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
+            #${ip} -4 addr flush dev ${interface} label ${interface}:0
+            #${ip} -4 addr add ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
+            ${ip} -f inet addr flush dev ${interface} label ${interface}:0
+            ${ip} -f inet addr add ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
                 dev ${interface} label ${interface}:0
-            ${ip} -4 route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
+            #${ip} -4 route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
+            ${ip} -f inet route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
         fi
 
         # update /etc/resolv.conf
@@ -327,19 +343,23 @@ case "$reason" in
     EXPIRE|FAIL|RELEASE|STOP)
         if [ -n "$alias_ip_address" ]; then
             # flush alias IP
-            ${ip} -4 addr flush dev ${interface} label ${interface}:0
+            #${ip} -4 addr flush dev ${interface} label ${interface}:0
+            ${ip} -f inet addr flush dev ${interface} label ${interface}:0
         fi
 
         if [ -n "$old_ip_address" ]; then
             # flush leased IP
-            ${ip} -4 addr flush dev ${interface} label ${interface}
+            #${ip} -4 addr flush dev ${interface} label ${interface}
+            ${ip} -f inet addr flush dev ${interface} label ${interface}
         fi
 
         if [ -n "$alias_ip_address" ]; then
             # alias IP given => set it & add host route to it
-            ${ip} -4 addr add ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
+            #${ip} -4 addr add ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
+            ${ip} -f inet addr add ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
                 dev ${interface} label ${interface}:0
-            ${ip} -4 route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
+            #${ip} -4 route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
+            ${ip} -f inet route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
         fi
 
         ;;
@@ -347,11 +367,13 @@ case "$reason" in
     TIMEOUT)
         if [ -n "$alias_ip_address" ]; then
             # flush alias IP
-            ${ip} -4 addr flush dev ${interface} label ${interface}:0
+            #${ip} -4 addr flush dev ${interface} label ${interface}:0
+            ${ip} -f inet addr flush dev ${interface} label ${interface}:0
         fi
 
         # set IP from recorded lease
-        ${ip} -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
+        #${ip} -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
+        ${ip} -f inet addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
             ${new_broadcast_address:+broadcast $new_broadcast_address} \
             dev ${interface} label ${interface}
 
@@ -368,10 +390,12 @@ case "$reason" in
 		    if [ -n "$alias_ip_address" ] &&
 		       [ "$new_ip_address" != "$alias_ip_address" ]; then
 			# separate alias IP given => set up the alias IP & add host route to it
-			${ip} -4 addr add \
+			#${ip} -4 addr add \
+			${ip} -f inet addr add \
                               ${alias_ip_address}${alias_subnet_mask:+/$alias_subnet_mask} \
 			      dev ${interface} label ${interface}:0
-			${ip} -4 route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
+			#${ip} -4 route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
+			${ip} -f inet route add ${alias_ip_address} dev ${interface} >/dev/null 2>&1
 		    fi
 
 		    # set if_metric if IF_METRIC is set or there's more than one router
@@ -382,7 +406,8 @@ case "$reason" in
 
 		    # set default route
 		    for router in $new_routers; do
-			${ip} -4 route add default via ${router} dev ${interface} \
+			#${ip} -4 route add default via ${router} dev ${interface} \
+			${ip} -f inet route add default via ${router} dev ${interface} \
 			    ${if_metric:+metric $if_metric} >/dev/null 2>&1
 
 			if [ -n "$if_metric" ]; then
@@ -395,7 +420,8 @@ case "$reason" in
             make_resolv_conf
         else
             # flush all IPs from interface
-            ip -4 addr flush dev ${interface}
+           # ip -4 addr flush dev ${interface}
+	   ip -f inet flush dev $(interface)
             exit_with_hooks 2
         fi
 
@@ -404,7 +430,8 @@ case "$reason" in
     V6ONLY)
         if [ -n "$old_ip_address" ]; then
             # flush leased IP
-            ${ip} -4 addr flush dev ${interface} label ${interface}
+            #${ip} -4 addr flush dev ${interface} label ${interface}
+            ${ip} -f inet addr flush dev ${interface} label ${interface}
         fi
 
         ;;
@@ -428,7 +455,7 @@ case "$reason" in
         done
 
         # flush any stale global permanent IPs from interface
-        ${ip} -6 addr flush dev ${interface} scope global permanent
+        ${ip} -f inet6 addr flush dev ${interface} scope global permanent
 
         # Wait for duplicate address detection for this interface if the
         # --dad-wait-time parameter has been specified and is greater than
@@ -477,7 +504,7 @@ case "$reason" in
         fi
 
         # set preferred lifetime of leased IP to 0
-        ${ip} -6 addr change ${cur_ip6_address}/${cur_ip6_prefixlen} \
+        ${ip} -f inet6 addr change ${cur_ip6_address}/${cur_ip6_prefixlen} \
             dev ${interface} scope global preferred_lft 0
 
         ;;
@@ -488,7 +515,7 @@ case "$reason" in
         fi
 
         # delete leased IP
-        ${ip} -6 addr del ${old_ip6_address}/${old_ip6_prefixlen} \
+        ${ip} -f inet6 addr del ${old_ip6_address}/${old_ip6_prefixlen} \
             dev ${interface}
 
         ;;

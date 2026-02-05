@@ -70,6 +70,7 @@ echo 0 > /proc/sys/kernel/printk
 
 process_commandline_options
 InitializeBusybox
+ln -s /bin/sh /bin/bash # not exactly accurate, but aids with many scripts requiring a #!/bin/bash 
 emount /dev
 run_hooks early
 SetupNetwork
